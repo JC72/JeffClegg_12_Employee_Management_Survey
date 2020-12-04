@@ -1,0 +1,26 @@
+{
+  "dependencies": {
+    "asciiart-logo": "^0.2.6"
+  },
+  "name": "jeffclegg_12_employee_management_survey",
+  "description": "",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JC72/JeffClegg_12_Employee_Management_Survey.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JC72/JeffClegg_12_Employee_Management_Survey/issues"
+  },
+  "homepage": "https://github.com/JC72/JeffClegg_12_Employee_Management_Survey#readme"
+}

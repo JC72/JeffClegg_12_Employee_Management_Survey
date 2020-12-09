@@ -3,11 +3,16 @@ const fs = require("fs");
 var mysql = require("mysql");
 
 // calls the function to start mySql
-const connection = require("./lib/js/sqlStart");
+const connection = require("./lib/js/connection");
 
 //These are needed so to call various files needed for the inquirer prompts and menu choices
 const mainMenu = require('./lib/js/mainMenuChoices')
 const prompts = require('./lib/js/prompts')
+
+// Created a array that contain the inquirer prompts that will be used
+const inquirerTypes = [
+    'input', 'confim', 'list'
+]
 
 // Program Logo requirements based off of package.json file created: 
 const logo = require('asciiart-logo');

@@ -1,17 +1,20 @@
 {
   "dependencies": {
-    "asciiart-logo": "^0.2.6"
+    "asciiart-logo": "^0.2.6",
+    "console.table": "^0.10.0",
+    "inquirer": "^7.3.3",
+    "mysql": "^2.18.1"
   },
-  "name": "jeffclegg_12_employee_management_survey",
-  "description": "",
+  "name": "employee_tracker",
+  "description": "jeffclegg_12_employee_management_survery",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "directories": {
     "lib": "lib"
   },
-  "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
@@ -22,5 +25,6 @@
   "bugs": {
     "url": "https://github.com/JC72/JeffClegg_12_Employee_Management_Survey/issues"
   },
-  "homepage": "https://github.com/JC72/JeffClegg_12_Employee_Management_Survey#readme"
+  "homepage": "https://github.com/JC72/JeffClegg_12_Employee_Management_Survey#readme",
+  "devDependencies": {}
 }

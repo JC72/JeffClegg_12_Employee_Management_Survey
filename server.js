@@ -16,6 +16,8 @@ const inquirerTypes = [
 // Program Logo requirements based off of package.json file created: 
 const logo = require('asciiart-logo');
 const config = require('./package.json');
+const { allowedNodeEnvironmentFlags } = require('process');
+const { addEmployee1 } = require('./lib/js/prompts');
 console.log(logo(config).render());
 
 const connection = mysql.createConnection({
@@ -84,57 +86,57 @@ function runSearch() {
 
             // views all employees by role
             case mainMenu[5]:
-                views.allEmpRole();
+                allEmpRole();
                 break;
 
             // views all managers
             case mainMenu[6]:
-                views.allManagers();
+                allManagers();
                 break;
 
             // adds a department
             case mainMenu[7]:
-            //     adds.
+                addDept();
                 break;
 
             // Removes a department
             case mainMenu[8]:
-            //     adds.
+                remDept();
                 break;
 
             // adds a role
             case mainMenu[9]:
-                //     adds.
+                addRole();
                     break;
 
             // removes a role
             case mainMenu[10]:
-                //     adds.
-                    break;
+                remRole();
+                break;
 
             // adds a employee
             case mainMenu[11]:
-                //     adds.
-                    break;
+                addEmp();
+                break;
 
             // removes a employee
             case mainMenu[12]:
-                //     adds.
-                    break;
+                remEmp();
+                 break;
 
             // Update employee role
             case mainMenu[13]:
-            //     adds.
+                updEmpRole();
                 break;
 
             // Update employee manager
             case mainMenu[14]:
-            //     adds.
+                updEmpMan();
                 break;
 
             // update employee salary
             case mainMenu[15]:
-            //     adds.
+                updEmpSal();
                 break;
 
         // quit application
@@ -169,10 +171,11 @@ function  allRoles() {
 
 function  allEmployees() {
 
-    const query = 'SELECT employee.id, employee.first_name, employee.last_name, role.title, department.d_name AS department, role.salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager ' +
-    'FROM employee LEFT JOIN role on employee.role_id = role.id ' +
-    'LEFT JOIN department on role.department_id = department.id ' +
-    'LEFT JOIN employee manager on manager.id = employee.manager_id'
+     const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.d_name
+     FROM employee
+     INNER JOIN role on role.id = employee.role_id
+     INNER JOIN department on department.id = role.department_id;`
+       
 
     connection.query(query, function(err, res) {
         if (err) throw err;
@@ -181,19 +184,201 @@ function  allEmployees() {
     })
 }
 
-function  allEmployees() {
+async function  allEmpDept() {
 
-    const query = 'SELECT employee.id, employee.first_name, employee.last_name, role.title, department.d_name AS department, role.salary, CONCAT(manager.first_name, " ", manager.last_name) AS manager ' +
-    'FROM employee LEFT JOIN role on employee.role_id = role.id ' +
-    'LEFT JOIN department on role.department_id = department.id ' +
-    'LEFT JOIN employee manager on manager.id = employee.manager_id'
+    await inquirer.prompt([
+        {
+        name: 'deptName',
+        type: inquirerTypes[0],
+        message: prompts.viewAllEmpByDep,
+        }
+    ]).then(answers => {
 
-    connection.query(query, function(err, res) {
+        const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.d_name
+        FROM employee
+        INNER JOIN role on role.id = employee.role_id
+        INNER JOIN department on department.id = role.department_id AND department.d_name = ? ;`
+    
+    
+        var department = connection.query(query,[answers.deptName],
+            
+            function (err, department) {
+            if (err) throw err;
+            console.table(department);
+            runSearch();
+        })
+    })
+}
+
+// async function  allEmpMan() {
+
+//     await inquirer.prompt([
+//         {
+//         name: 'empMan',
+//         type: inquirerTypes[0],
+//         message: prompts.viewAllEmpByDep,
+//         }
+//     ]).then(answers => {
+
+//     const query = 'SELECT employee.id, employee.first_name, employee.last_name, department.d_name, employee.manager_id AS department, role.title FROM employee ' +
+//     'LEFT JOIN role on role.id = employee.role_id ' +
+//     'LEFT JOIN department ON department.id = role.department_id WHERE manager_id;'
+
+
+//     var manager = connection.query(query,
+        
+//         function (err, manager) {
+//         if (err) throw err;
+//         console.table(manager);
+//         runSearch();
+//     })
+// }
+
+// function  allEmpRole() {
+
+//     const query = 
+
+
+//     var  = connection.query(query,
+        
+//         function (err, manager) {
+//         if (err) throw err;
+//         console.table(manager);
+//         runSearch();
+//     })
+// }
+
+function  allManagers() {
+
+    const query = `SELECT employee.id, employee.first_name, employee.last_name, department.d_name
+    FROM employee
+    INNER JOIN role on role.id = employee.role_id
+    INNER JOIN department on department.id = role.department_id
+    WHERE employee.id IN ( SELECT employee.manager_id FROM employee );`
+
+
+    var manager = connection.query(query,
+        
+        function (err, manager) {
         if (err) throw err;
-        console.table(res);
+        console.table(manager);
         runSearch();
     })
 }
+
+async function  addDept() {
+
+    await inquirer.prompt([
+        {
+        name: 'deptName',
+        type: inquirerTypes[0],
+        message: prompts.newDep,
+        },
+        
+    ]).then(answers => {
+
+    const query = `INSERT INTO department SET d_name = ?`
+
+
+        var newDept = connection.query(query, [answers.deptName],
+            
+            function (err, newDept) {
+            if (err) throw err;
+            console.log(answers.deptName + 'added');
+            allDep();
+            runSearch();
+        })
+    })
+}
+
+async function  remDept() {
+
+    await inquirer.prompt([
+        {
+        name: 'deptName',
+        type: inquirerTypes[0],
+        message: prompts.deleteDep,
+        },
+        
+    ]).then(answers => {
+
+    const query = `DELETE FROM department WHERE d_name = ?`
+
+
+        var newDept = connection.query(query, [answers.deptName],
+            
+            function (err, manager) {
+            if (err) throw err;
+            console.log(answers.deptName + 'deleted');
+            allDep();
+            runSearch();
+        })
+    })
+}
+
+async function  addRole() {
+
+    await inquirer.prompt([
+        {
+        name: 'newRole',
+        type: inquirerTypes[0],
+        message: prompts.newRole,
+        },
+        
+    ]).then(answers => {
+
+    const query = `INSERT INTO role SET title = ?`
+
+
+        var nRole = connection.query(query, [answers.newRole],
+            
+            function (err, nRole) {
+            if (err) throw err;
+            console.log(answers.newRole + 'added');
+            allRole();
+            runSearch();
+        })
+    })
+}
+
+async function  remRole() {
+
+    await inquirer.prompt([
+        {
+        name: 'roleTitle',
+        type: inquirerTypes[0],
+        message: prompts.deleteRole,
+        },
+        
+    ]).then(answers => {
+
+    const query = `DELETE FROM role WHERE title = ?`
+
+
+        var delRole = connection.query(query, [answers.roleTitle],
+            
+            function (err, delRole) {
+            if (err) throw err;
+            console.log(answers.roleTitle + 'deleted');
+            allRole();
+            runSearch();
+        })
+    })
+}
+
+// function  allManagers() {
+
+//     const query = 
+
+
+//     var manager = connection.query(query,
+        
+//         function (err, manager) {
+//         if (err) throw err;
+//         console.table(manager);
+//         runSearch();
+//     })
+// }
 
 function quit() {
     console.log("Goodbye!");

@@ -434,34 +434,53 @@ async function addEmp() {
             }
             var addRoleEmpID = res[0].id;
             console.log(addRoleEmpID);
-        })
-
-    const query = 'INSERT INTO employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ?'
-
-    var addEmployee = connection.query(query,
-        [answers.firstName, answers.lastName, addRoleEmpID, answers.managerId],
-        function (error, addEmployee) {
-            if (error) throw error;
         
-        console.log('Employee' + answers.firstname + '' + answers.lastName + ' added');
-        allEmployees();
+
+        const query = 'INSERT INTO employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ?'
+
+            var addEmployee = connection.query(query,
+                [answers.firstName, answers.lastName, addRoleEmpID, answers.managerId],
+                function (error, addEmployee) {
+                    if (error) throw error;
+                
+                console.log('Employee ' + answers.firstName + '' + answers.lastName + ' added');
+                allEmployees();
+
+            })
 
         })
-    })
+        })
 }
-// function  allManagers() {
+async function  updEmpRole() {
 
-//     const query = 
+    await inquirer.prompt([
+        {
+        name: 'roleId',
+        type: inquirerTypes[0],
+        message: prompts.updateRole,
+        },
 
-
-//     var manager = connection.query(query,
+        {
+            name: 'employeeId',
+            type: inquirerTypes[0],
+            message: prompts.addEmployee3,
+            },
         
-//         function (err, manager) {
-//         if (err) throw err;
-//         console.table(manager);
-//         runSearch();
-//     })
-// }
+    ]).then(answers => {
+
+    const query = "UPDATE employee SET role_id = ? WHERE id = ?"
+
+
+        var updRole = connection.query(query,[answers.roleId, answers.employeeId],
+            
+            function (err, updRole) {
+            if (err) throw err;
+            
+            allEmployees();
+            })
+        })
+
+}
 
 function quit() {
     console.log("Goodbye!");

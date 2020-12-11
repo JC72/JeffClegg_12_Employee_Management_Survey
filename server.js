@@ -16,8 +16,6 @@ const inquirerTypes = [
 // Program Logo requirements based off of package.json file created: 
 const logo = require('asciiart-logo');
 const config = require('./package.json');
-const { allowedNodeEnvironmentFlags } = require('process');
-const { addEmployee1 } = require('./lib/js/prompts');
 console.log(logo(config).render());
 
 const connection = mysql.createConnection({
@@ -41,12 +39,30 @@ connection.connect(function(err) {
         runSearch();
   });
 
+  let roleNameArr = [];
+  let roleArr = [];
 
+  const query1 = 'SELECT role.id, role.title FROM role'
+
+  const rolequery = connection.query(query1, function(err, res) {
+      if (err) throw err;
+
+      for (let i = 0; i < res.length; i++) {
+          let roleTitle = res[i].title;
+          let roleObj = {
+              ID: res[i].id,
+              title: res[i].title
+          }
+
+          roleArr.push(roleObj);
+          roleNameArr.push(roleTitle);
+      }
+
+  })
 
 //Function to generate the prompts and menu selections for the application
 function runSearch() {
-    //const menuMain = new InqFuncs(inquirerTypes[2], 'action', prompts.mainMenuPrompt, mainMenu);
-
+    
      inquirer
     .prompt({
         
@@ -305,9 +321,9 @@ async function  remDept() {
     const query = `DELETE FROM department WHERE d_name = ?`
 
 
-        var newDept = connection.query(query, [answers.deptName],
+        var remDept = connection.query(query, [answers.deptName],
             
-            function (err, manager) {
+            function (err, remDept) {
             if (err) throw err;
             console.log(answers.deptName + ' deleted');
             allDep();
@@ -323,14 +339,26 @@ async function  addRole() {
         name: 'newRole',
         type: inquirerTypes[0],
         message: prompts.newRole,
+        },
+
+        {
+        name:'salary',
+        type: inquirerTypes[0],
+        message: prompts.salary,
+        },
+
+        {
+        name: 'departmentId',
+        type: inquirerTypes[0],
+        message: 'What is the department id for this roll?',
         }
         
     ]).then(answers => {
 
-    const query = `INSERT INTO role SET title = ?`
+    const query = `INSERT INTO role SET title = ?, salary = ?, department_id = ?`
 
 
-        var nRole = connection.query(query, [answers.newRole],
+        var nRole = connection.query(query, [answers.newRole, answers.salary, answers.departmentId],
             
             function (err, nRole) {
             if (err) throw err;
@@ -378,19 +406,20 @@ async function addEmp() {
 
         {
         name: 'lastName',
-        type: iquirerTypes[0],
+        type: inquirerTypes[0],
         message: prompts.addEmployee2,
         },
 
         {
-        name: 'roleId',
-        type: iquirerTypes[0],
+        name: 'roleTitle',
+        type: inquirerTypes[2],
         message: prompts.addEmployee3,
+        choices: roleNameArr,
         },
 
         {
         name: 'managerId',
-        type: iquirerTypes[0],
+        type: inquirerTypes[0],
         message: prompts.addEmployee4,
         },
 
@@ -398,11 +427,20 @@ async function addEmp() {
         
     ]).then(answers => {
 
+        const query2 = connection.query(`SELECT role.id from role WHERE role.title = ?;`, [answers.roleTitle],
+        function (err,res) {
+            if (err) { 
+                throw err;
+            }
+            var addRoleEmpID = res[0].id;
+            console.log(addRoleEmpID);
+        })
+
     const query = 'INSERT INTO employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ?'
 
-    var addemployee = connection.query(query,
-        [answers.firstName, answers.lastName, answers.roleID, answers.managerId],
-        function (error, addemployee) {
+    var addEmployee = connection.query(query,
+        [answers.firstName, answers.lastName, addRoleEmpID, answers.managerId],
+        function (error, addEmployee) {
             if (error) throw error;
         
         console.log('Employee' + answers.firstname + '' + answers.lastName + ' added');

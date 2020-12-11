@@ -273,7 +273,7 @@ async function  addDept() {
         name: 'deptName',
         type: inquirerTypes[0],
         message: prompts.newDep,
-        },
+        }
         
     ]).then(answers => {
 
@@ -284,7 +284,7 @@ async function  addDept() {
             
             function (err, newDept) {
             if (err) throw err;
-            console.log(answers.deptName + 'added');
+            console.log(answers.deptName + ' added');
             allDep();
             runSearch();
         })
@@ -298,7 +298,7 @@ async function  remDept() {
         name: 'deptName',
         type: inquirerTypes[0],
         message: prompts.deleteDep,
-        },
+        }
         
     ]).then(answers => {
 
@@ -309,7 +309,7 @@ async function  remDept() {
             
             function (err, manager) {
             if (err) throw err;
-            console.log(answers.deptName + 'deleted');
+            console.log(answers.deptName + ' deleted');
             allDep();
             runSearch();
         })
@@ -323,7 +323,7 @@ async function  addRole() {
         name: 'newRole',
         type: inquirerTypes[0],
         message: prompts.newRole,
-        },
+        }
         
     ]).then(answers => {
 
@@ -334,8 +334,8 @@ async function  addRole() {
             
             function (err, nRole) {
             if (err) throw err;
-            console.log(answers.newRole + 'added');
-            allRole();
+            console.log(answers.newRole + ' added');
+            allRoles();
             runSearch();
         })
     })
@@ -348,7 +348,7 @@ async function  remRole() {
         name: 'roleTitle',
         type: inquirerTypes[0],
         message: prompts.deleteRole,
-        },
+        }
         
     ]).then(answers => {
 
@@ -359,13 +359,58 @@ async function  remRole() {
             
             function (err, delRole) {
             if (err) throw err;
-            console.log(answers.roleTitle + 'deleted');
-            allRole();
+            console.log(answers.roleTitle + ' deleted');
+            allRoles();
             runSearch();
         })
     })
 }
 
+// "Add employee"
+async function addEmp() {
+
+    await inquirer.prompt([
+        {
+        name: 'firstName',
+        type: inquirerTypes[0],
+        message: prompts.addEmployee1,
+        },
+
+        {
+        name: 'lastName',
+        type: iquirerTypes[0],
+        message: prompts.addEmployee2,
+        },
+
+        {
+        name: 'roleId',
+        type: iquirerTypes[0],
+        message: prompts.addEmployee3,
+        },
+
+        {
+        name: 'managerId',
+        type: iquirerTypes[0],
+        message: prompts.addEmployee4,
+        },
+
+
+        
+    ]).then(answers => {
+
+    const query = 'INSERT INTO employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ?'
+
+    var addemployee = connection.query(query,
+        [answers.firstName, answers.lastName, answers.roleID, answers.managerId],
+        function (error, addemployee) {
+            if (error) throw error;
+        
+        console.log('Employee' + answers.firstname + '' + answers.lastName + ' added');
+        allEmployees();
+
+        })
+    })
+}
 // function  allManagers() {
 
 //     const query = 

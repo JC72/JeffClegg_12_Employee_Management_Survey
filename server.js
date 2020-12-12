@@ -2,7 +2,7 @@ const inquirer = require('inquirer');
 const fs = require('fs');
 var mysql = require('mysql');
 var util = require('util');
-
+var EventListener = require('events').EventEmitter.defaultMaxListeners = 30;
 
 //These are needed so to call various files needed for the inquirer prompts and menu choices
 const mainMenu = require('./lib/js/mainMenuChoices');
@@ -10,7 +10,7 @@ const prompts = require('./lib/js/prompts');
 
 // Created a array that contain the inquirer "types" that will be used
 const inquirerTypes = [
-    'input', 'confim', 'list'
+    'input', 'confirm', 'list'
 ]
 
 // Program Logo requirements based off of package.json file created: 
@@ -127,11 +127,13 @@ connection.connect(function(err) {
           manNameArr.push(manTitle);
       }
   })
+        
+
 
 //Function to generate the prompts and menu selections for the application
-function runSearch() {
+async function runSearch() {
     
-     inquirer
+     await inquirer
     .prompt({
         
         name: 'action',
@@ -209,7 +211,7 @@ function runSearch() {
             
         }
         });
-}
+};
 
 function allDep() {
 
@@ -220,7 +222,7 @@ function allDep() {
         console.table(res);
         runSearch();
     })
-}
+};
 
 function  allRoles() {
 
@@ -231,7 +233,7 @@ function  allRoles() {
         console.table(res);
         runSearch();
     })
-}
+};
 
 function  allEmployees() {
 
@@ -246,11 +248,11 @@ function  allEmployees() {
         console.table(res);
         runSearch();
     })
-}
+};
 
-async function  allEmpDept() {
+function  allEmpDept() {
 
-    await inquirer.prompt([
+    inquirer.prompt([
         {
         name: 'deptName',
         type: inquirerTypes[2],
@@ -273,32 +275,50 @@ async function  allEmpDept() {
             runSearch();
         })
     })
-}
+};
 
-// async function  allEmpMan() {
+function  allEmpMan() {
 
-//     await inquirer.prompt([
-//         {
-//         name: 'empMan',
-//         type: inquirerTypes[0],
-//         message: prompts.viewAllEmpByDep,
-//         }
-//     ]).then(answers => {
-
-//     const query = 'SELECT employee.id, employee.first_name, employee.last_name, department.d_name, employee.manager_id AS department, role.title FROM employee ' +
-//     'LEFT JOIN role on role.id = employee.role_id ' +
-//     'LEFT JOIN department ON department.id = role.department_id WHERE manager_id;'
-
-
-//     var manager = connection.query(query,
+    inquirer.prompt([
+        {
+        name: 'manView',
+        type: inquirerTypes[2],
+        message: prompts.searchByManager,
+        choices: manNameArr,
+        }
         
-//         function (err, manager) {
-//         if (err) throw err;
-//         console.table(manager);
-//         runSearch();
-//     })
-// }
+    ]).then(answers => {
 
+        manName = answers.manView;
+            entManName = manName.split(" "),
+            manFisrtName = entManName[0],
+            manLastName = entManName[1];
+
+            const query6 = connection.query(`SELECT employee.id from employee 
+            WHERE (employee.first_name = ? and employee.last_name = ?);`, [manFisrtName, manLastName],
+            function (err,res) {
+                if (err) throw err;
+        
+                viewManID = res[0].id;
+
+const query = `SELECT employee.last_name, employee.first_name, role.title, department.d_name
+FROM employee
+INNER JOIN role on role.id = employee.role_id
+INNER JOIN department on department.id = role.department_id
+WHERE employee.manager_id = ?`
+
+
+    var manager = connection.query(query,viewManID,
+        
+        function (err, manager) {
+        if (err) throw err;
+        console.table(manager);
+        runSearch();
+    })
+
+    })
+    })
+};
 
 function  allManagers() {
 
@@ -316,11 +336,11 @@ function  allManagers() {
         console.table(manager);
         runSearch();
     })
-}
+};
 
-async function  addDept() {
+function  addDept() {
 
-    await inquirer.prompt([
+    inquirer.prompt([
         {
         name: 'deptName',
         type: inquirerTypes[0],
@@ -337,15 +357,17 @@ async function  addDept() {
             function (err, newDept) {
             if (err) throw err;
             console.log(answers.deptName + ' added');
+            
+            deptNameArr.push(answers.deptName);
+            
             allDep();
-            runSearch();
         })
     })
-}
+};
 
-async function  remDept() {
+function  remDept() {
 
-    await inquirer.prompt([
+    inquirer.prompt([
         {
         name: 'deptName',
         type: inquirerTypes[2],
@@ -364,10 +386,9 @@ async function  remDept() {
             if (err) throw err;
             console.log(answers.deptName + ' deleted');
             allDep();
-            runSearch();
         })
     })
-}
+};
 
 async function  addRole() {
 
@@ -391,15 +412,15 @@ async function  addRole() {
         choices: deptNameArr,
     }
         
-    ]).then(answers => {
+    ]).then( answers => {
 
-        const query2 = connection.query(`SELECT department.id from department WHERE department.d_name = ?;`, [answers.departmentName],
-        function (err,res) {
+        const deptQuery = connection.query(`SELECT department.id from department WHERE department.d_name = ?;`, [answers.departmentName],
+        function (err,deptQuery) {
             if (err) { 
                 throw err;
             }
-            var addDeptID = res[0].id   
-
+            var addDeptID = deptQuery[0].id   
+ 
     const query = `INSERT INTO role SET title = ?, salary = ?, department_id = ?`
 
 
@@ -408,16 +429,17 @@ async function  addRole() {
             function (err, nRole) {
             if (err) throw err;
             console.log(answers.newRole + ' added');
+            roleNameArr.push(answers.newRole);
             allRoles();
-            runSearch();
         })
     })
 })
-}
+            
+};
 
-async function  remRole() {
+function  remRole() {
 
-    await inquirer.prompt([
+    inquirer.prompt([
         {
         name: 'roleTitle',
         type: inquirerTypes[2],
@@ -437,15 +459,15 @@ async function  remRole() {
             if (err) throw err;
             console.log(answers.roleTitle + ' deleted');
             allRoles();
-            runSearch();
+
         })
     })
-}
+};
 
 // "Add employee"
-async function addEmp() {
+function addEmp() {
 
-    await inquirer.prompt([
+    inquirer.prompt([
         {
         name: 'firstName',
         type: inquirerTypes[0],
@@ -477,11 +499,11 @@ async function addEmp() {
     ]).then(answers => {
 
         const query2 = connection.query(`SELECT role.id from role WHERE role.title = ?;`, [answers.roleTitle],
-        function (err,res) {
+        function (err,query2) {
             if (err) { 
                 throw err;
             }
-            var addRoleEmpID = res[0].id;
+            var addRoleEmpID = query2[0].id;
             
         
             manName = answers.managerId;
@@ -491,10 +513,10 @@ async function addEmp() {
 
             const query6 = connection.query(`SELECT employee.id from employee 
             WHERE (employee.first_name = ? and employee.last_name = ?);`, [manFisrtName, manLastName],
-            function (err,res) {
+            function (err,query6) {
                 if (err) throw err;
         
-                addManID = res[0].id;
+                addManID = query6[0].id;
 
         const query = 'INSERT INTO employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ?'
 
@@ -504,6 +526,8 @@ async function addEmp() {
                     if (error) throw error;
                 
                 console.log('Employee ' + answers.firstName + '' + answers.lastName + ' added');
+                var employeeName = answers.firstName + " " + answers.lastName;
+                empNameArr.push(employeeName);
                 allEmployees();
 
             })
@@ -511,12 +535,12 @@ async function addEmp() {
 
         })
         })
-}
+};
     
 
-async function  updEmpRole() {
+function  updEmpRole() {
 
-    await inquirer.prompt([
+    inquirer.prompt([
 
         {
             name: 'employeeId',
@@ -524,7 +548,7 @@ async function  updEmpRole() {
             message: prompts.addEmployee3,
             choices: empNameArr,
             },
-            
+
         {
         name: 'roleId',
         type: inquirerTypes[2],
@@ -568,10 +592,10 @@ async function  updEmpRole() {
         })
     })
 
-}
+};
 
 function quit() {
     console.log("Goodbye!");
     process.exit();
 
-  }
+  };

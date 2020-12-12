@@ -16,6 +16,7 @@ const inquirerTypes = [
 // Program Logo requirements based off of package.json file created: 
 const logo = require('asciiart-logo');
 const config = require('./package.json');
+const { clear } = require('console');
 console.log(logo(config).render());
 
 const connection = mysql.createConnection({
@@ -60,6 +61,73 @@ connection.connect(function(err) {
 
   })
 
+  let deptNameArr = [];
+  let deptArr = [];
+
+  const query3 = `SELECT * FROM employee_manager.department;`
+
+  const overallQuery = connection.query(query3, function(err, res) {
+      if (err) throw err;
+
+      for (let i = 0; i < res.length; i++) {
+          let deptTitle = res[i].d_name;
+          let deptObj = {
+              ID: res[i].id,
+              title: res[i].d_name
+          }
+
+          deptArr.push(deptObj);
+          deptNameArr.push(deptTitle);
+      }
+
+  })
+
+  let empNameArr = [];
+  let empArr = [];
+
+  const query4 = `SELECT employee.id, employee.first_name, employee.last_name FROM employee_manager.employee;`
+
+  const empQuery = connection.query(query4, function(err, res) {
+      if (err) throw err;
+
+      for (let i = 0; i < res.length; i++) {
+          let empTitle = res[i].first_name + " " + res[i].last_name;
+          let empObj = {
+              ID: res[i].id,
+              FirstName: res[i].first_name,
+              LastName: res[i].last_name
+          }
+
+          empArr.push(empObj);
+          empNameArr.push(empTitle);
+      }
+  })
+
+  let manNameArr = [];
+  let manArr = [];
+
+  const query5 = `SELECT employee.id, employee.first_name, employee.last_name, department.d_name
+  FROM employee
+  INNER JOIN role on role.id = employee.role_id
+  INNER JOIN department on department.id = role.department_id
+  WHERE employee.id IN ( SELECT employee.manager_id FROM employee );`
+
+  const manQuery = connection.query(query5, function(err, res) {
+      if (err) throw err;
+
+      for (let i = 0; i < res.length; i++) {
+          let manTitle = res[i].first_name + " " + res[i].last_name;
+          let manObj = {
+              ID: res[i].id,
+              FirstName: res[i].first_name,
+              LastName: res[i].last_name
+          }
+
+          manArr.push(manObj);
+          manNameArr.push(manTitle);
+      }
+  })
+
 //Function to generate the prompts and menu selections for the application
 function runSearch() {
     
@@ -100,63 +168,43 @@ function runSearch() {
                 allEmpMan();
                 break;
 
-            // views all employees by role
-            case mainMenu[5]:
-                allEmpRole();
-                break;
-
             // views all managers
-            case mainMenu[6]:
+            case mainMenu[5]:
                 allManagers();
                 break;
 
             // adds a department
-            case mainMenu[7]:
+            case mainMenu[6]:
                 addDept();
                 break;
 
             // Removes a department
-            case mainMenu[8]:
+            case mainMenu[7]:
                 remDept();
                 break;
 
             // adds a role
-            case mainMenu[9]:
+            case mainMenu[8]:
                 addRole();
                     break;
 
             // removes a role
-            case mainMenu[10]:
+            case mainMenu[9]:
                 remRole();
                 break;
 
             // adds a employee
-            case mainMenu[11]:
+            case mainMenu[10]:
                 addEmp();
                 break;
 
-            // removes a employee
-            case mainMenu[12]:
-                remEmp();
-                 break;
-
             // Update employee role
-            case mainMenu[13]:
+            case mainMenu[11]:
                 updEmpRole();
                 break;
 
-            // Update employee manager
-            case mainMenu[14]:
-                updEmpMan();
-                break;
-
-            // update employee salary
-            case mainMenu[15]:
-                updEmpSal();
-                break;
-
         // quit application
-            case mainMenu[16]:
+            case mainMenu[12]:
 		    return quit();
             
         }
@@ -419,8 +467,9 @@ async function addEmp() {
 
         {
         name: 'managerId',
-        type: inquirerTypes[0],
+        type: inquirerTypes[2],
         message: prompts.addEmployee4,
+        choices: manNameArr,
         },
 
 
@@ -435,11 +484,22 @@ async function addEmp() {
             var addRoleEmpID = res[0].id;
             console.log(addRoleEmpID);
         
+            manName = answers.managerId;
+            entManName = manName.split(" "),
+            manFisrtName = entManName[0],
+            manLastName = entManName[1];
+
+            const query6 = connection.query(`SELECT employee.id from employee 
+            WHERE (employee.first_name = ? and employee.last_name = ?);`, [manFisrtName, manLastName],
+            function (err,res) {
+                if (err) throw err;
+        
+                addManID = res[0].id;
 
         const query = 'INSERT INTO employee SET first_name = ?, last_name = ?, role_id = ?, manager_id = ?'
 
             var addEmployee = connection.query(query,
-                [answers.firstName, answers.lastName, addRoleEmpID, answers.managerId],
+                [answers.firstName, answers.lastName, addRoleEmpID, addManID],
                 function (error, addEmployee) {
                     if (error) throw error;
                 
@@ -447,10 +507,13 @@ async function addEmp() {
                 allEmployees();
 
             })
+            })
 
         })
         })
 }
+    
+
 async function  updEmpRole() {
 
     await inquirer.prompt([

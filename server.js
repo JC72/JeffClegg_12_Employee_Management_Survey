@@ -235,10 +235,10 @@ function  allRoles() {
 
 function  allEmployees() {
 
-     const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.d_name
-     FROM employee
-     INNER JOIN role on role.id = employee.role_id
-     INNER JOIN department on department.id = role.department_id;`
+     const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, department.d_name AS department,
+      role.salary, CONCAT(manager.first_name, ' ', manager.last_name) AS manager FROM employee 
+      LEFT JOIN role on employee.role_id = role.id 
+      LEFT JOIN department on role.department_id = department.id LEFT JOIN employee manager on manager.id = employee.manager_id;`
        
 
     connection.query(query, function(err, res) {
@@ -253,9 +253,10 @@ async function  allEmpDept() {
     await inquirer.prompt([
         {
         name: 'deptName',
-        type: inquirerTypes[0],
+        type: inquirerTypes[2],
         message: prompts.viewAllEmpByDep,
-        }
+        choices: deptNameArr,
+    }
     ]).then(answers => {
 
         const query = `SELECT employee.id, employee.first_name, employee.last_name, role.title, role.salary, department.d_name
@@ -298,19 +299,6 @@ async function  allEmpDept() {
 //     })
 // }
 
-// function  allEmpRole() {
-
-//     const query = 
-
-
-//     var  = connection.query(query,
-        
-//         function (err, manager) {
-//         if (err) throw err;
-//         console.table(manager);
-//         runSearch();
-//     })
-// }
 
 function  allManagers() {
 
@@ -360,8 +348,9 @@ async function  remDept() {
     await inquirer.prompt([
         {
         name: 'deptName',
-        type: inquirerTypes[0],
+        type: inquirerTypes[2],
         message: prompts.deleteDep,
+        choices: deptNameArr,
         }
         
     ]).then(answers => {
@@ -396,17 +385,25 @@ async function  addRole() {
         },
 
         {
-        name: 'departmentId',
-        type: inquirerTypes[0],
-        message: 'What is the department id for this roll?',
-        }
+        name: 'departmentName',
+        type: inquirerTypes[2],
+        message: 'What is the department for this roll?',
+        choices: deptNameArr,
+    }
         
     ]).then(answers => {
+
+        const query2 = connection.query(`SELECT department.id from department WHERE department.d_name = ?;`, [answers.departmentName],
+        function (err,res) {
+            if (err) { 
+                throw err;
+            }
+            var addDeptID = res[0].id   
 
     const query = `INSERT INTO role SET title = ?, salary = ?, department_id = ?`
 
 
-        var nRole = connection.query(query, [answers.newRole, answers.salary, answers.departmentId],
+        var nRole = connection.query(query, [answers.newRole, answers.salary, addDeptID],
             
             function (err, nRole) {
             if (err) throw err;
@@ -415,6 +412,7 @@ async function  addRole() {
             runSearch();
         })
     })
+})
 }
 
 async function  remRole() {
@@ -422,11 +420,13 @@ async function  remRole() {
     await inquirer.prompt([
         {
         name: 'roleTitle',
-        type: inquirerTypes[0],
+        type: inquirerTypes[2],
         message: prompts.deleteRole,
+        choices: roleNameArr,
         }
         
     ]).then(answers => {
+                   
 
     const query = `DELETE FROM role WHERE title = ?`
 
@@ -482,7 +482,7 @@ async function addEmp() {
                 throw err;
             }
             var addRoleEmpID = res[0].id;
-            console.log(addRoleEmpID);
+            
         
             manName = answers.managerId;
             entManName = manName.split(" "),
@@ -517,24 +517,47 @@ async function addEmp() {
 async function  updEmpRole() {
 
     await inquirer.prompt([
-        {
-        name: 'roleId',
-        type: inquirerTypes[0],
-        message: prompts.updateRole,
-        },
 
         {
             name: 'employeeId',
-            type: inquirerTypes[0],
+            type: inquirerTypes[2],
             message: prompts.addEmployee3,
+            choices: empNameArr,
             },
+            
+        {
+        name: 'roleId',
+        type: inquirerTypes[2],
+        message: prompts.updateRole,
+        choices: roleNameArr,
+        },
         
     ]).then(answers => {
+
+        const query2 = connection.query(`SELECT role.id from role WHERE role.title = ?;`, [answers.roleId],
+        function (err,res) {
+            if (err) { 
+                throw err;
+            }
+            var addRoleID = res[0].id;
+            
+        
+            empName = answers.employeeId;
+            entEmpName = empName.split(" "),
+            empFisrtName = entEmpName[0],
+            empLastName = entEmpName[1];
+
+            const query6 = connection.query(`SELECT employee.id from employee 
+            WHERE (employee.first_name = ? and employee.last_name = ?);`, [empFisrtName, empLastName],
+            function (err,res) {
+                if (err) throw err;
+        
+                addEmpID = res[0].id;
 
     const query = "UPDATE employee SET role_id = ? WHERE id = ?"
 
 
-        var updRole = connection.query(query,[answers.roleId, answers.employeeId],
+        var updRole = connection.query(query,[addRoleID, addEmpID],
             
             function (err, updRole) {
             if (err) throw err;
@@ -542,6 +565,8 @@ async function  updEmpRole() {
             allEmployees();
             })
         })
+        })
+    })
 
 }
 

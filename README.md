@@ -24,7 +24,7 @@ This project has been deployed to my Personal GitHub Page. To get this project u
 
 ## Demo:
 
-![](https://github.com/JC72/JeffClegg_09_GoodReadMe_Generator/blob/main/Assets/DemoVideo.gif)
+![](https://github.com/JC72/JeffClegg_12_Employee_Management_Survey/blob/main/lib/assets/video/DemoVideo.gif)
 
 Once node index.js is run, the application uses will prompt the user in the command line with a series of questions about your GitHub and about your project.
 
